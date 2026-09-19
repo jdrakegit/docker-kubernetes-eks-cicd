@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AutoLink</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#000000;
+    --muted:#6e6e6e;
+    --faint:#a3a3a3;
+    --bg:#ffffff;
+    --surface:#f5f5f5;
+    --border:#e4e4e4;
+    --line:#d8d8d8;
+    --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Instrument Sans', -apple-system, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.45;
+  }
+  a{color:inherit; text-decoration:none;}
+  button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;}
+  input, textarea{font-family:inherit;}
+
+  .app{
+    display:grid;
+    grid-template-columns:248px minmax(0,600px) 300px;
+    justify-content:center;
+    gap:32px;
+    max-width:1240px;
+    margin:0 auto;
+    padding:0 24px;
+  }
+
+  /* ---------- LEFT NAV ---------- */
+  .nav{
+    position:sticky; top:0;
+    height:100vh;
+    padding:28px 4px 24px 0;
+    display:flex;
+    flex-direction:column;
+  }
+  .wordmark{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:23px;
+    letter-spacing:-0.02em;
+    margin-bottom:36px;
+    padding-left:8px;
+    display:flex;
+    align-items:center;
+    gap:2px;
+  }
+  .wordmark .auto{ font-weight:400; color:var(--ink); }
+  .wordmark .link{ font-weight:600; color:var(--ink); }
+  .wordmark .mark{
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--ink);
+    display:inline-block;
+    margin-left:3px;
+    transform:translateY(-9px);
+  }
+  .nav-links{ display:flex; flex-direction:column; gap:2px; }
+  .nav-link{
+    display:flex; align-items:center; gap:14px;
+    padding:11px 12px;
+    border-radius:10px;
+    font-size:16px;
+    color:var(--ink);
+    transition:background .15s ease;
+  }
+  .nav-link:hover{ background:var(--surface); }
+  .nav-link.active{ font-weight:600; }
+  .nav-link svg{ width:20px; height:20px; flex-shrink:0; }
+
+  .post-btn{
+    margin-top:20px;
+    background:var(--ink);
+    color:#fff;
+    border-radius:999px;
+    padding:13px 0;
+    width:100%;
+    font-size:15px;
+    font-weight:600;
+    transition:opacity .15s ease;
+  }
+  .post-btn:hover{ opacity:.82; }
+
+  .nav-spacer{ flex:1; }
+
+  .mini-profile{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 8px;
+    border-radius:10px;
+  }
+  .mini-profile:hover{ background:var(--surface); }
+  .avatar{
+    width:36px; height:36px; border-radius:50%;
+    background:#ececec;
+    flex-shrink:0;
+    overflow:hidden;
+    display:inline-block;
+  }
+  .avatar svg{ width:100%; height:100%; display:block; }
+  .mini-profile .name{ font-size:14px; font-weight:600; }
+  .mini-profile .handle{ font-size:13px; color:var(--muted); }
+
+  /* ---------- CENTER FEED ---------- */
+  .feed-col{
+    border-left:1px solid var(--border);
+    border-right:1px solid var(--border);
+    min-height:100vh;
+  }
+  .feed-header{
+    position:sticky; top:0;
+    background:rgba(255,255,255,.88);
+    backdrop-filter:blur(8px);
+    padding:18px 20px 0 20px;
+    z-index:5;
+  }
+  .feed-header h1{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:21px;
+    margin-bottom:16px;
+  }
+  .tabs{ display:flex; gap:4px; border-bottom:1px solid var(--border); }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:14px 0;
+    font-size:15px;
+    color:var(--muted);
+    border-bottom:2px solid transparent;
+    transition:color .15s ease;
+  }
+  .tab.active{ color:var(--ink); font-weight:600; border-bottom-color:var(--ink); }
+  .tab:hover{ color:var(--ink); }
+
+  .composer{
+    padding:18px 20px;
+    border-bottom:8px solid var(--surface);
+    display:flex; gap:12px;
+  }
+  .composer textarea{
+    width:100%;
+    border:none;
+    resize:none;
+    font-size:16px;
+    font-family:inherit;
+    outline:none;
+    min-height:24px;
+    color:var(--ink);
+  }
+  .composer textarea::placeholder{ color:var(--faint); }
+  .composer-footer{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:12px;
+  }
+  .car-chip{
+    display:inline-flex; align-items:center; gap:6px;
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:7px 14px;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .composer .post-btn{ width:auto; padding:9px 22px; margin:0; font-size:14px; }
+  .composer .post-btn:disabled{ opacity:.35; cursor:default; }
+
+  .post{
+    padding:20px;
+    border-bottom:8px solid var(--surface);
+  }
+  .post-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+  .post-meta{ display:flex; gap:12px; }
+  .post-meta .avatar{ width:42px; height:42px; }
+  .post-user .handle{ font-size:15px; font-weight:600; }
+  .post-user .car-name{
+    font-family:'Fraunces', serif;
+    font-size:17px;
+    margin-top:2px;
+  }
+  .post-user .tag{ font-size:13px; color:var(--muted); margin-top:2px; }
+  .follow-btn{
+    border:1px solid var(--ink);
+    border-radius:999px;
+    padding:7px 16px;
+    font-size:13px;
+    font-weight:600;
+    transition:all .15s ease;
+  }
+  .follow-btn.following{
+    background:var(--ink);
+    color:#fff;
+  }
+  .follow-btn:not(.following):hover{ background:var(--surface); }
+
+  .post-caption{ font-size:15px; margin:4px 0 14px 0; }
+
+  .post-photo{
+    width:100%;
+    aspect-ratio:16/10;
+    border-radius:var(--radius);
+    position:relative;
+    overflow:hidden;
+    margin-bottom:12px;
+    display:flex; align-items:flex-end;
+  }
+  .post-photo img{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    object-fit:cover;
+    filter:grayscale(35%) contrast(1.05);
+  }
+  .post-photo::after{
+    content:"";
+    position:absolute; inset:0;
+    background:linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,0) 45%);
+  }
+  .post-photo .caption-tag{
+    position:relative;
+    color:#fff;
+    font-family:'Fraunces', serif;
+    font-size:22px;
+    padding:18px;
+    letter-spacing:-0.01em;
+    z-index:2;
+  }
+
+  .post-actions{ display:flex; gap:22px; align-items:center; }
+  .action{
+    display:flex; align-items:center; gap:7px;
+    font-size:14px; color:var(--muted);
+    transition:color .15s ease;
+  }
+  .action svg{ width:19px; height:19px; }
+  .action:hover{ color:var(--ink); }
+  .action.liked{ color:var(--ink); font-weight:600; }
+  .action.liked svg{ fill:var(--ink); }
+
+  /* ---------- RIGHT SIDEBAR ---------- */
+  .side{ padding:28px 0 24px 0; }
+  .search{
+    background:var(--surface);
+    border-radius:999px;
+    padding:11px 16px;
+    font-size:14px;
+    color:var(--muted);
+    margin-bottom:24px;
+    border:1px solid transparent;
+  }
+  .search input{
+    background:none; border:none; outline:none; width:100%;
+    font-size:14px; color:var(--ink);
+  }
+  .search input::placeholder{ color:var(--faint); }
+
+  .panel{
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:20px;
+  }
+  .panel h2{
+    font-size:15px; font-weight:600; margin-bottom:14px;
+  }
+  .nearby-item{
+    display:flex; align-items:center; gap:10px;
+    padding:8px 0;
+  }
+  .nearby-item + .nearby-item{ border-top:1px solid var(--border); }
+  .nearby-thumb{
+    width:44px; height:44px; border-radius:9px; flex-shrink:0;
+    overflow:hidden;
+  }
+  .nearby-thumb img{
+    width:100%; height:100%; object-fit:cover;
+    filter:grayscale(35%) contrast(1.05);
+  }
+  .nearby-info{ flex:1; min-width:0; }
+  .nearby-info .car{ font-family:'Fraunces', serif; font-size:14.5px; }
+  .nearby-info .sub{ font-size:12.5px; color:var(--muted); }
+  .view-link{ font-size:13px; font-weight:600; color:var(--ink); }
+  .view-link:hover{ text-decoration:underline; }
+
+  .tags{ display:flex; flex-wrap:wrap; gap:8px; }
+  .tag-pill{
+    font-size:13px;
+    color:var(--ink);
+    background:var(--surface);
+    padding:7px 12px;
+    border-radius:999px;
+    transition:background .15s ease;
+  }
+  .tag-pill:hover{ background:var(--line); }
+
+  .foot-note{
+    font-size:12px;
+    color:var(--faint);
+    padding:0 4px;
+    line-height:1.6;
+  }
+
+  .toast{
+    position:fixed;
+    bottom:28px; left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff;
+    padding:12px 20px;
+    border-radius:999px;
+    font-size:14px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease, transform .2s ease;
+    z-index:100;
+    white-space:nowrap;
+  }
+  .toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+
+  .no-results{
+    padding:40px 20px;
+    text-align:center;
+    color:var(--muted);
+    font-size:15px;
+  }
+
+  .topbar{ display:none; }
+  @media (max-width:1080px){
+    .topbar{
+      display:flex; justify-content:center; align-items:center;
+      padding:14px 0;
+      border-bottom:1px solid var(--border);
+      position:sticky; top:0;
+      background:#fff;
+      z-index:30;
+    }
+    .topbar .logo{
+      font-family:'Fraunces', serif;
+      font-weight:500;
+      font-size:19px;
+      display:flex; align-items:center; gap:2px;
+    }
+    .topbar .auto{ font-weight:400; color:var(--ink); }
+    .topbar .link{ font-weight:600; color:var(--ink); }
+    .topbar .mark{
+      width:5px; height:5px; border-radius:50%;
+      background:var(--ink);
+      margin-left:3px;
+      transform:translateY(-7px);
+    }
+  }
+  @media (max-width:1080px){
+    .app{ grid-template-columns:88px minmax(0,1fr); }
+    .side{ display:none; }
+    .wordmark{ display:none; }
+    .nav-link span{ display:none; }
+    .nav-link{ justify-content:center; }
+    .post-btn span{ display:none; }
+    .post-btn{ font-size:20px; padding:13px; }
+    .mini-profile .name, .mini-profile .handle{ display:none; }
+    .feed-header{ top:52px; }
+  }
+  @media (max-width:680px){
+    .app{ grid-template-columns:1fr; padding:0; gap:0; }
+    .nav{
+      position:fixed; bottom:0; left:0; right:0; top:auto; height:auto;
+      flex-direction:row; justify-content:space-around;
+      background:#fff; border-top:1px solid var(--border);
+      padding:10px 4px; z-index:20;
+    }
+    .nav-links{ flex-direction:row; width:100%; justify-content:space-around; }
+    .nav-link span{ display:none; }
+    .post-btn, .nav-spacer, .mini-profile{ display:none; }
+    .feed-col{ border:none; padding-bottom:70px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo"><span class="auto">Auto</span><span class="link">Link</span><span class="mark"></span></div>
+</div>
+
+<div class="app">
+
+  <!-- LEFT NAV -->
+  <nav class="nav">
+    <div class="wordmark"><span class="auto">Auto</span><span class="link">Link</span><span class="mark"></span></div>
+    <div class="nav-links">
+      <a class="nav-link active" href="#" data-page="Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11.5L12 4l9 7.5"/><path d="M5 10v9.5a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/></svg>
+        <span>Home</span>
+      </a>
+      <a class="nav-link" href="#" data-page="Explore">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <span>Explore</span>
+      </a>
+      <a class="nav-link" href="#" data-page="Garage">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21V10l9-6 9 6v11"/><path d="M9 21v-6h6v6"/></svg>
+        <span>Garage</span>
+      </a>
+      <a class="nav-link" href="#" data-page="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+        <span>Notifications</span>
+      </a>
+      <a class="nav-link" href="#" data-page="Messages">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <span>Messages</span>
+      </a>
+      <a class="nav-link" href="#" data-page="Profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+        <span>Profile</span>
+      </a>
+    </div>
+    <button class="post-btn" id="sidebarPostBtn"><span>Post</span></button>
+    <div class="nav-spacer"></div>
+    <div class="mini-profile">
+      <div class="avatar"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#ececec"/><path d="M8 78 Q8 66 20 66 L30 54 Q35 48 46 48 L66 48 Q75 48 79 56 L90 66 Q96 67 96 75 L96 80 Q96 83 93 83 L10 83 Q8 83 8 80 Z" fill="#171717"/><circle cx="27" cy="83" r="8" fill="#171717"/><circle cx="78" cy="83" r="8" fill="#171717"/><circle cx="60" cy="30" r="8" fill="#171717"/><path d="M52 44 Q52 38 60 38 Q68 38 68 44 L68 62 Q68 66 60 66 Q52 66 52 62 Z" fill="#171717"/></svg></div>
+      <div>
+        <div class="name">Sam Rivera</div>
+        <div class="handle">@e30daily</div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- CENTER FEED -->
+  <main class="feed-col" id="feedCol">
+    <div class="feed-header">
+      <h1>Home</h1>
+      <div class="tabs">
+        <div class="tab active" data-tab="foryou">For you</div>
+        <div class="tab" data-tab="following">Following</div>
+        <div class="tab" data-tab="nearby">Nearby</div>
+      </div>
+    </div>
+
+    <div class="composer" id="composer">
+      <div class="avatar"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#ececec"/><path d="M8 78 Q8 66 20 66 L30 54 Q35 48 46 48 L66 48 Q75 48 79 56 L90 66 Q96 67 96 75 L96 80 Q96 83 93 83 L10 83 Q8 83 8 80 Z" fill="#171717"/><circle cx="27" cy="83" r="8" fill="#171717"/><circle cx="78" cy="83" r="8" fill="#171717"/><circle cx="60" cy="30" r="8" fill="#171717"/><path d="M52 44 Q52 38 60 38 Q68 38 68 44 L68 62 Q68 66 60 66 Q52 66 52 62 Z" fill="#171717"/></svg></div>
+      <div style="flex:1">
+        <textarea id="composerText" rows="1" placeholder="Share something about your car..." oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+        <div class="composer-footer">
+          <div class="car-chip">🚗 1989 BMW E30</div>
+          <button class="post-btn" id="composerPostBtn">Post</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="postList">
+    <!-- POST 1 -->
+    <article class="post">
+      <div class="post-top">
+        <div class="post-meta">
+          <div class="avatar"><img src="images/nissan-pfp.png" alt="@project240" style="width:100%;height:100%;object-fit:cover;"></div>
+          <div class="post-user">
+            <div class="handle">@project240</div>
+            <div class="car-name">2001 Nissan 240SX</div>
+            <div class="tag">Project car</div>
+          </div>
+        </div>
+        <button class="follow-btn" onclick="toggleFollow(this)">Follow</button>
+      </div>
+      <p class="post-caption">Finally got the wheels on. Been waiting months for this.</p>
+      <div class="post-photo"><img src="images/240sx.png" alt="2001 Nissan 240SX"><div class="caption-tag">240SX</div></div>
+      <div class="post-actions">
+        <div class="action" onclick="toggleLike(this,42)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7.5-4.9-10-9.3C.4 8.2 2 4.5 5.6 4a5 5 0 016.4 2.3A5 5 0 0118.4 4c3.6.5 5.2 4.2 3.6 7.7C19.5 16.1 12 21 12 21z"/></svg>
+          <span class="count">42</span>
+        </div>
+        <div class="action">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 01-8.9 8.4 8.6 8.6 0 01-4-1L3 20l1.2-5a8.4 8.4 0 01-1.2-4.5A8.4 8.4 0 0111.9 2a8.5 8.5 0 019.1 8.5z"/></svg>
+          <span>8</span>
+        </div>
+        <div class="action">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>
+          <span>Share</span>
+        </div>
+        <div class="action">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+          <span>Save</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- POST 2 -->
+    <article class="post">
+      <div class="post-top">
+        <div class="post-meta">
+          <div class="avatar"><img src="images/miata-pfp.png" alt="@miatamiles" style="width:100%;height:100%;object-fit:cover;"></div>
+          <div class="post-user">
+            <div class="handle">@miatamiles</div>
+            <div class="car-name">1997 Mazda Miata</div>
+            <div class="tag">Update #06</div>
+          </div>
+        </div>
+        <button class="follow-btn following" onclick="toggleFollow(this)">Following</button>
+      </div>
+      <p class="post-caption">Update #06 — finally installed the suspension. Sits exactly how I pictured it.</p>
+      <div class="post-photo"><img src="images/miata.png" alt="1997 Mazda Miata"><div class="caption-tag">Miata</div></div>
+      <div class="post-actions">
+        <div class="action" onclick="toggleLike(this,116)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7.5-4.9-10-9.3C.4 8.2 2 4.5 5.6 4a5 5 0 016.4 2.3A5 5 0 0118.4 4c3.6.5 5.2 4.2 3.6 7.7C19.5 16.1 12 21 12 21z"/></svg>
+          <span class="count">116</span>
+        </div>
+        <div class="action">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 01-8.9 8.4 8.6 8.6 0 01-4-1L3 20l1.2-5a8.4 8.4 0 01-1.2-4.5A8.4 8.4 0 0111.9 2a8.5 8.5 0 019.1 8.5z"/></svg>
+          <span>19</span>
+        </div>
+        <div class="action">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>
+          <span>Share</span>
+        </div>
+        <div class="action">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+          <span>Save</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- POST 3 -->
+    <article class="post">
+      <div class="post-top">
+        <div class="post-meta">
+          <div class="avatar"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#ececec"/><path d="M10 76 Q10 64 22 64 L32 52 Q37 46 48 46 L68 46 Q77 46 81 54 L92 64 Q98 65 98 73 L98 78 Q98 81 95 81 L12 81 Q10 81 10 78 Z" fill="#171717"/><circle cx="29" cy="81" r="8" fill="#171717"/><circle cx="80" cy="81" r="8" fill="#171717"/><circle cx="80" cy="30" r="7.5" fill="#171717"/><path d="M72 44 Q72 38 80 38 Q88 38 88 44 L88 60 Q88 64 80 64 Q72 64 72 60 Z" fill="#171717"/></svg></div>
+          <div class="post-user">
+            <div class="handle">@boostedben</div>
+            <div class="car-name">2004 Subaru WRX</div>
+            <div class="tag">Daily driver</div>
+          </div>
+        </div>
+        <button class="follow-btn" onclick="toggleFollow(this)">Follow</button>
+      </div>
+      <p class="post-caption">Spotted this clean E30 at the meet last night. Had to get a photo before it left.</p>
+      <div class="post-photo"><img src="images/wrx.png" alt="2004 Subaru WRX"><div class="caption-tag">WRX</div></div>
+      <div class="post-actions">
+        <div class="action" onclick="toggleLike(this,27)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7.5-4.9-10-9.3C.4 8.2 2 4.5 5.6 4a5 5 0 016.4 2.3A5 5 0 0118.4 4c3.6.5 5.2 4.2 3.6 7.7C19.5 16.1 12 21 12 21z"/></svg>
+          <span class="count">27</span>
+        </div>
+        <div class="action">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 01-8.9 8.4 8.6 8.6 0 01-4-1L3 20l1.2-5a8.4 8.4 0 01-1.2-4.5A8.4 8.4 0 0111.9 2a8.5 8.5 0 019.1 8.5z"/></svg>
+          <span>4</span>
+        </div>
+        <div class="action">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>
+          <span>Share</span>
+        </div>
+        <div class="action">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+          <span>Save</span>
+        </div>
+      </div>
+    </article>
+    </div>
+
+  </main>
+
+  <!-- RIGHT SIDEBAR -->
+  <aside class="side">
+    <div class="search">
+      <input type="text" id="searchInput" placeholder="Search AutoLink" />
+    </div>
+
+    <div class="panel">
+      <h2>Cars near you</h2>
+      <div class="nearby-item">
+        <div class="nearby-thumb"><img src="images/wrx.png" alt="Subaru WRX"></div>
+        <div class="nearby-info">
+          <div class="car">2004 Subaru WRX</div>
+          <div class="sub">@boostedben · 3.2 mi</div>
+        </div>
+        <a class="view-link" href="#">View</a>
+      </div>
+      <div class="nearby-item">
+        <div class="nearby-thumb"><img src="images/e30.png" alt="BMW E30"></div>
+        <div class="nearby-info">
+          <div class="car">1991 BMW E30</div>
+          <div class="sub">@e30daily · 4.7 mi</div>
+        </div>
+        <a class="view-link" href="#">View</a>
+      </div>
+      <div class="nearby-item">
+        <div class="nearby-thumb"><img src="images/240sx.png" alt="Nissan 240SX"></div>
+        <div class="nearby-info">
+          <div class="car">1989 Nissan 240SX</div>
+          <div class="sub">@midnightbuild · 6.1 mi</div>
+        </div>
+        <a class="view-link" href="#">View</a>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Trending</h2>
+      <div class="tags">
+        <div class="tag-pill">Budget builds</div>
+        <div class="tag-pill">JDM</div>
+        <div class="tag-pill">Atlanta car meet</div>
+        <div class="tag-pill">Miata</div>
+        <div class="tag-pill">Project cars</div>
+      </div>
+    </div>
+
+    <p class="foot-note">Every car has a story. AutoLink gives it a place to live.</p>
+  </aside>
+
+</div>
+
+<script>
+  function toggleLike(el, base){
+    const liked = el.classList.toggle('liked');
+    const countEl = el.querySelector('.count');
+    countEl.textContent = liked ? base + 1 : base;
+  }
+  function toggleFollow(btn){
+    const now = btn.classList.toggle('following');
+    btn.textContent = now ? 'Following' : 'Follow';
+  }
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+
+  // --- Toast helper ---
+  function showToast(msg){
+    let toast = document.getElementById('toast');
+    if(!toast){
+      toast = document.createElement('div');
+      toast.id = 'toast';
+      toast.className = 'toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(()=> toast.classList.remove('show'), 2200);
+  }
+
+  // --- Nav links: switch active state, toast for unbuilt pages ---
+  document.querySelectorAll('.nav-link').forEach(link=>{
+    link.addEventListener('click', (e)=>{
+      e.preventDefault();
+      document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+      link.classList.add('active');
+      const page = link.dataset.page;
+      if(page && page !== 'Home'){
+        showToast(page + ' — coming soon');
+      }
+    });
+  });
+
+  // --- Sidebar Post button scrolls to composer and focuses it ---
+  const sidebarPostBtn = document.getElementById('sidebarPostBtn');
+  if(sidebarPostBtn){
+    sidebarPostBtn.addEventListener('click', ()=>{
+      const composer = document.getElementById('composer');
+      composer.scrollIntoView({behavior:'smooth', block:'center'});
+      document.getElementById('composerText').focus();
+    });
+  }
+
+  // --- Composer: actually post to the feed ---
+  const composerPostBtn = document.getElementById('composerPostBtn');
+  if(composerPostBtn){
+    composerPostBtn.addEventListener('click', ()=>{
+      const textEl = document.getElementById('composerText');
+      const text = textEl.value.trim();
+      if(!text) return;
+
+      const post = document.createElement('article');
+      post.className = 'post';
+      post.innerHTML = `
+        <div class="post-top">
+          <div class="post-meta">
+            <div class="avatar"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#ececec"/><path d="M8 78 Q8 66 20 66 L30 54 Q35 48 46 48 L66 48 Q75 48 79 56 L90 66 Q96 67 96 75 L96 80 Q96 83 93 83 L10 83 Q8 83 8 80 Z" fill="#171717"/><circle cx="27" cy="83" r="8" fill="#171717"/><circle cx="78" cy="83" r="8" fill="#171717"/><circle cx="60" cy="30" r="8" fill="#171717"/><path d="M52 44 Q52 38 60 38 Q68 38 68 44 L68 62 Q68 66 60 66 Q52 66 52 62 Z" fill="#171717"/></svg></div>
+            <div class="post-user">
+              <div class="handle">@e30daily</div>
+              <div class="car-name">1989 BMW E30</div>
+              <div class="tag">Just now</div>
+            </div>
+          </div>
+          <button class="follow-btn following">Following</button>
+        </div>
+        <p class="post-caption"></p>
+        <div class="post-actions">
+          <div class="action" onclick="toggleLike(this,0)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7.5-4.9-10-9.3C.4 8.2 2 4.5 5.6 4a5 5 0 016.4 2.3A5 5 0 0118.4 4c3.6.5 5.2 4.2 3.6 7.7C19.5 16.1 12 21 12 21z"/></svg>
+            <span class="count">0</span>
+          </div>
+          <div class="action">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 11.5a8.4 8.4 0 01-8.9 8.4 8.6 8.6 0 01-4-1L3 20l1.2-5a8.4 8.4 0 01-1.2-4.5A8.4 8.4 0 0111.9 2a8.5 8.5 0 019.1 8.5z"/></svg>
+            <span>0</span>
+          </div>
+          <div class="action">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>
+            <span>Share</span>
+          </div>
+          <div class="action">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+            <span>Save</span>
+          </div>
+        </div>
+      `;
+      post.querySelector('.post-caption').textContent = text;
+
+      const postList = document.getElementById('postList');
+      postList.insertBefore(post, postList.firstChild);
+
+      textEl.value = '';
+      textEl.style.height = 'auto';
+      showToast('Posted');
+    });
+  }
+
+  // --- Search: filter posts live by handle / car name / caption ---
+  const searchInput = document.getElementById('searchInput');
+  if(searchInput){
+    searchInput.addEventListener('input', ()=>{
+      const q = searchInput.value.trim().toLowerCase();
+      const postList = document.getElementById('postList');
+      const posts = postList.querySelectorAll('.post');
+      let anyVisible = false;
+
+      posts.forEach(post=>{
+        const text = post.textContent.toLowerCase();
+        const match = q === '' || text.includes(q);
+        post.style.display = match ? '' : 'none';
+        if(match) anyVisible = true;
+      });
+
+      let empty = document.getElementById('noResults');
+      if(!anyVisible && q !== ''){
+        if(!empty){
+          empty = document.createElement('div');
+          empty.id = 'noResults';
+          empty.className = 'no-results';
+          empty.textContent = 'No posts match "' + searchInput.value.trim() + '"';
+          postList.appendChild(empty);
+        }
+      } else if(empty){
+        empty.remove();
+      }
+    });
+  }
+
+</script>
+
+</body>
+</html>

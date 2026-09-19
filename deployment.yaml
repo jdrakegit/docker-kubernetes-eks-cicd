@@ -1,0 +1,19 @@
+apiVersion: apps/v1             
+kind: Deployment                 
+metadata:
+  name: autolink-deployment    
+spec:
+  replicas: 2                    
+  selector:
+    matchLabels:
+      app: autolink             
+  template:
+    metadata:
+      labels:
+        app: autolink           
+    spec:
+      containers:
+      - name: autolink           
+        image: dockeraccount05/autolink   
+        ports:
+        - containerPort: 80       
