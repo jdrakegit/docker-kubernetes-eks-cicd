@@ -41,6 +41,8 @@ AWS Load Balancer (created automatically by a Kubernetes Service)
 
 ## Testing
 
+![kubectl get pods output](getnodes.jpg)
+
 Checked pods were healthy with `kubectl get pods`, then grabbed the Load Balancer URL from `kubectl get services` and hit it in a browser to make sure the app was actually reachable, not just "running" on paper.
 
 ## Teardown
