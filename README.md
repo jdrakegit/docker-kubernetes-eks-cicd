@@ -1,6 +1,8 @@
 
 # AutoLink — Containerized App Deployment on AWS EKS
 
+![AutoLink running](webpage.jpg)
+
 A car-focused social platform prototype I came up with, containerized with Docker and deployed to a real Kubernetes cluster on AWS EKS, all provisioned with Terraform.
 
 I built this mainly to actually learn Docker and Kubernetes hands-on instead of just watching tutorials. The app itself isn't really the point here, it's everything underneath it: the container, the cluster, the networking.
