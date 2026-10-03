@@ -40,3 +40,4 @@ jobs:
       - name: Deploy to Kubernetes
         run: kubectl rollout restart deployment autolink-deployment
         # trigger pipeline
+# retry
