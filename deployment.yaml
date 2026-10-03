@@ -17,3 +17,4 @@ spec:
         image: dockeraccount05/autolink   
         ports:
         - containerPort: 80       
+        
