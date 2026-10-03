@@ -1,17 +1,22 @@
-
 # AutoLink — Containerized App Deployment on AWS EKS
 
 ![AutoLink running](webpage.jpg)
 
-A car-focused social platform prototype I came up with, containerized with Docker and deployed to a real Kubernetes cluster on AWS EKS, all provisioned with Terraform.
+A car-focused social platform prototype I came up with, containerized with Docker and deployed to a real Kubernetes cluster on AWS EKS, all provisioned with Terraform, with a GitHub Actions pipeline that builds, pushes, and redeploys automatically on every push.
 
-I built this mainly to actually learn Docker and Kubernetes hands-on instead of just watching tutorials. The app itself isn't really the point here, it's everything underneath it: the container, the cluster, the networking.
+I built this mainly to actually learn Docker and Kubernetes hands-on instead of just watching tutorials. The app itself isn't really the point here, it's everything underneath it: the container, the cluster, the networking, and the pipeline that ties it all together.
 
-**Stack:** Docker · Kubernetes · AWS EKS · Terraform · GitHub Actions (in progress)
+**Stack:** Docker · Kubernetes · AWS EKS · Terraform · GitHub Actions
 
 ## Architecture
 
 ```
+git push
+   │
+   ▼
+GitHub Actions (builds image, pushes to Docker Hub, redeploys to EKS)
+   │
+   ▼
 Internet
    │
    ▼
@@ -29,7 +34,7 @@ AWS Load Balancer (created automatically by a Kubernetes Service)
 - Dockerfile builds the app on `nginx:alpine`
 - Kubernetes Deployment (2 replicas) and Service (`type: LoadBalancer`)
 - EKS cluster + node group, IAM roles, VPC, subnets, Internet Gateway, and route tables, all in Terraform
-- GitHub Actions pipeline to automate build → push → deploy (in progress)
+- GitHub Actions pipeline (`.github/workflows/deploy.yml`) that checks out the code, builds and pushes the Docker image (targeting `linux/amd64` since EKS nodes don't run on Apple Silicon), logs into AWS, and restarts the Kubernetes deployment, all on push to `main`
 
 ## Notes from the build
 
@@ -38,14 +43,11 @@ AWS Load Balancer (created automatically by a Kubernetes Service)
 - Node group failed to launch the first time I applied, turns out the default instance type wasn't Free Tier eligible on my account, fixed by setting `instance_types = ["t3.micro"]` explicitly
 - Couldn't get `kubectl` to connect to a cluster I had literally just created. Apparently newer EKS versions don't automatically give the creator admin access anymore, needed `bootstrap_cluster_creator_admin_permissions = true`
 - That setting can't be updated in place either, so changing it forces Terraform to destroy and recreate the whole cluster
+- Building the GitHub Actions pipeline turned up a few more: a secret saved as a repo Variable instead of a Secret caused a silent "username required" failure, and the pipeline's dedicated IAM user needed its own EKS access entry and an explicit `eks:DescribeCluster` permission before it could actually talk to the cluster, separate from the IAM policies I'd already attached to it
 
 ## Testing
 
-![kubectl get pods output](getnodes.jpg)
-
-![kubectl get services output](getservices.jpg)
-
-Checked pods were healthy with `kubectl get pods`, then grabbed the Load Balancer URL from `kubectl get services` and hit it in a browser to make sure the app was actually reachable, not just "running" on paper.
+Checked pods were healthy with `kubectl get pods`, then grabbed the Load Balancer URL from `kubectl get services` and hit it in a browser to make sure the app was actually reachable, not just "running" on paper. Confirmed the full pipeline by pushing a real commit and watching new pods with a fresh ReplicaSet name actually appear in `kubectl get pods`.
 
 ## Teardown
 
@@ -80,11 +82,7 @@ kubectl apply -f deployment.yaml
 kubectl apply -f service.yaml
 ```
 
-Grab the public URL from `kubectl get services` once the Load Balancer finishes provisioning.
-
-## What's next
-
-Finishing the GitHub Actions pipeline so a push to `main` builds, pushes, and redeploys on its own, no manual steps.
+Grab the public URL from `kubectl get services` once the Load Balancer finishes provisioning. From here, any push to `main` will automatically rebuild and redeploy the app through the GitHub Actions pipeline.
 
 ---
 
